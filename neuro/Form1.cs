@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
@@ -40,114 +41,21 @@ namespace neuro
 
         private void button1_Click(object sender, EventArgs e)
         {
-            //Обучение
-            progressBar1.Maximum = fileName.Count;
 
-            //Считываем веса из файла
-            network.ReadFromFile();
-
-            for (int l = 0; l < fileName.Count; l++)
-            {
-                //Загружаем картинку
-                Bitmap newImage = new Bitmap(@"D:\repos\neuro\train\" + fileName[l]);
-
-                //Создаем вектора с данными 
-                Vector fileVector = new Vector(784);
-                Vector Y = new Vector(10);
-
-                //Обрабатываем картинк
-                for (int j = 0; j < newImage.Width; j++)
-                    for (int i = 0; i < newImage.Height; i++)
-                    {
-                        //Получаем цвет от 0 до 1 в градиенте белого 
-                        fileVector[j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
-                    }
-                //Записываем данные в вектор ответа
-                Y[Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
-
-                //Пробуем в потоки
-                int theardCount = 15; // Кол-во потоков + 1
-
-                List<Thread> threads = new List<Thread>(); // Список потоков
-
-                //Запускаем потоки
-                for (int i = 0; i < theardCount; i++)
-                {
-                    //Создаем поток и добавляем в него все данные
-                    threads.Add(new Thread(() =>
-                        {
-                            fornewthread(fileVector, Y, network);
-                        }));
-                    //Запускаем поток
-                    threads[i].Start();
-                }
-
-                //Запускаем в главном потоке обучение
-                network.Train(fileVector, Y, 1, 1e-7, 666); // запускаем обучение сети 
-
-                //Увеличиваем прогресс бар
-                progressBar1.Value = progressBar1.Value + 1;
-
-                //Раннее завершение обучения
-                if (l == 200) break;
-
-            }
-            //Закончили 
-            listBox1.Items.Add("Обучение закончено, записываем данные в файл");
-            network.WriteToFile();
         }
 
         static object locker = new object();
         //Функция для обучения в многопоточности
         void fornewthread(Vector fileVector, Vector Y, Network network)
         {
-            network.Train(fileVector, Y, 1, 1e-7, 666); // запускаем обучение сети 
+            network.Train(fileVector, Y, 1, 1e-7, 10000/ theardCount); // запускаем обучение сети 
         }
 
         int jk = 0;
         //Обработка изображения для ответа
         private void button2_Click(object sender, EventArgs e)
         {
-            //Загрузка изображения
-            Bitmap newImage2 = new Bitmap(@"D:\repos\neuro\train\" + fileName[jk]);
-            //Установка его в форму
-            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            pictureBox1.Load(@"D:\repos\neuro\train\" + fileName[jk]);
 
-            Vector fileVector3 = new Vector(784);
-
-            //Обработка изображения
-            for (int j = 0; j < newImage2.Width; j++)
-                for (int i = 0; i < newImage2.Height; i++)
-                {
-                    fileVector3[j * newImage2.Width + i] = 0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R);
-                }
-
-            //Получаем ответ из нейросети 
-            lock (locker)
-            {
-                //Прямой проход по сети
-                Vector fileVector4 = network.Forward(fileVector3);
-                //Очистка листбокса
-                listBox1.Items.Clear();
-                //Выводим имя файла
-                listBox1.Items.Add(Convert.ToString(fileName[jk]));
-                double sample = 0,
-                    samplePos = 0;
-                //Выводим ответ и ишем Max
-                for (int j = 0; j < 10; j++)
-                {
-                    listBox1.Items.Add(j + ": " + fileVector4[j]);
-                    if (fileVector4[j] > sample)
-                    {
-                        sample = fileVector4[j];
-                        samplePos = j;
-                    }
-                }
-                //Пишем догадку
-                listBox1.Items.Add("Это: " + samplePos + " ? " + sample);
-            }
-            jk++;
         }
 
         private void button3_Click(object sender, EventArgs e)
@@ -170,6 +78,194 @@ namespace neuro
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        int theardCount = 24; // Кол-во потоков + 1
+
+        private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //Обучение
+            progressBar1.Maximum = fileName.Count;
+
+            //Считаем время для статистики 
+            Stopwatch st = new Stopwatch();
+            st.Start();
+
+            //Считываем веса из файла
+            network.ReadFromFile();
+
+            int startPosition = 3016, //Стартовая позиция в папке
+                countTeachImg = 1500; //Кол-во изображений для обучения
+
+            for (int l = startPosition; l < fileName.Count; l++)
+            {
+                //Загружаем картинку
+                Bitmap newImage = new Bitmap(@"D:\repos\neuro\train\" + fileName[l]);
+
+                //Создаем вектора с данными 
+                Vector fileVector = new Vector(784);
+                Vector Y = new Vector(10);
+
+                //Обрабатываем картинк
+                for (int j = 0; j < newImage.Width; j++)
+                    for (int i = 0; i < newImage.Height; i++)
+                    {
+                        //Получаем цвет от 0 до 1 в градиенте белого 
+                        fileVector[j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
+                    }
+                //Записываем данные в вектор ответа
+                Y[Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
+
+                //Пробуем в потоки
+              //  int theardCount = 2014; // Кол-во потоков + 1
+
+                List<Thread> threads = new List<Thread>(); // Список потоков
+
+                //Запускаем потоки
+                for (int i = 0; i < theardCount; i++)
+                {
+                    //Создаем поток и добавляем в него все данные
+                    threads.Add(new Thread(() =>
+                    {
+                        fornewthread(fileVector, Y, network);
+                    }));
+                    //Запускаем поток
+                    threads[i].Start();
+                }
+
+                //Запускаем в главном потоке обучение
+                network.Train(fileVector, Y, 1, 1e-7, 10000 / theardCount); // запускаем обучение сети 
+
+                //Увеличиваем прогресс бар
+                progressBar1.Value = progressBar1.Value + 1;
+
+                //Раннее завершение обучения
+                if (l == startPosition + countTeachImg) break;
+
+            }
+
+            //Останавливаем таймер
+            st.Stop();
+
+            //Закончили 
+            listBox1.Items.Add("Обучение закончено, записываем данные в файл");
+            listBox1.Items.Add("Время выполнения: "+ st.Elapsed.TotalSeconds + " C.");
+
+            network.WriteToFile();
+        }
+
+        private void тестированиеToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            List<string> testFileName = new List<string>();
+            int[] numberSuccess = new int[10];
+            int[] numberFailure = new int[10];
+
+            DirectoryInfo dir = new DirectoryInfo(@"D:\repos\neuro\test\");
+            foreach (FileInfo file in dir.GetFiles())
+            {
+                testFileName.Add(file.Name);
+            }
+            listBox1.Items.Add("Тестовых изображений: " + testFileName.Count);
+
+            int success = 0,
+                failure = 0;
+
+            for (int tF = 0; tF < testFileName.Count; tF++)
+            {
+                Bitmap newImage = new Bitmap(@"D:\repos\neuro\test\" + testFileName[tF]);
+
+                //Создаем вектора с данными 
+                Vector fileVector = new Vector(784);
+                Vector Y = new Vector(10);
+
+                //Обработка изображения
+                for (int j = 0; j < newImage.Width; j++)
+                    for (int i = 0; i < newImage.Height; i++)
+                    {
+                        fileVector[j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
+                    }
+
+                //Прямой проход по сети
+                Vector fileVector4 = network.Forward(fileVector);
+               
+                double sample = 0,
+                    samplePos = 0;
+
+                //Выводим ответ и ишем Max
+                for (int j = 0; j < 10; j++)
+                {
+                    if (fileVector4[j] > sample)
+                    {
+                        sample = fileVector4[j];
+                        samplePos = j;
+                    }
+                }
+                //Пишем догадку
+                if(samplePos != Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))
+                {
+                    failure++;
+                    numberFailure[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
+
+                } else
+                {
+                    numberSuccess[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
+                    success++;
+                }
+            }
+
+            listBox1.Items.Add("Успешных: " + success);
+            listBox1.Items.Add("Неудач: " + failure);
+            listBox1.Items.Add("Проецент верных: " + (success * 100 / testFileName.Count) + "%");
+            for(int nS = 0; nS < 10; nS++)
+            {
+                listBox1.Items.Add(nS+": успешно" + numberSuccess[nS]+ " Неудач:" + numberFailure[nS]);
+            }
+
+        }
+
+        private void загрузитьToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.Cancel)
+                return;
+            //Загрузка изображения
+            Bitmap newImage2 = new Bitmap(openFileDialog1.FileName);
+            //Установка его в форму
+            pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
+         //   pictureBox1.Load(@"D:\repos\neuro\train\" + openFileDialog1.FileName);
+
+            Vector fileVector3 = new Vector(784);
+          
+            //Обработка изображения
+            for (int j = 0; j < newImage2.Width; j++)
+                for (int i = 0; i < newImage2.Height; i++)
+                {
+                    fileVector3[j * newImage2.Width + i] = 0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R);
+                }
+
+            //Получаем ответ из нейросети 
+            lock (locker)
+            {
+                //Прямой проход по сети
+                Vector fileVector4 = network.Forward(fileVector3);
+                //Очистка листбокса
+                listBox1.Items.Clear();
+                //Выводим имя файла
+                listBox1.Items.Add(Convert.ToString(openFileDialog1.FileName));
+                double sample = 0,
+                    samplePos = 0;
+                //Выводим ответ и ишем Max
+                for (int j = 0; j < 10; j++)
+                {
+                    listBox1.Items.Add(j + ": " + fileVector4[j]);
+                    if (fileVector4[j] > sample)
+                    {
+                        sample = fileVector4[j];
+                        samplePos = j;
+                    }
+                }
+                //Пишем догадку
+                listBox1.Items.Add("Это: " + samplePos + " ? " + sample);
+            }
         }
     }
 
@@ -336,7 +432,7 @@ namespace neuro
             {
                 for (int i = 0; i < deltas[j].n; i++)
                 {
-                    deltas[j][i] = Convert.ToDouble(sw.ReadLine()); 
+                    deltas[j][i] = Convert.ToDouble(sw.ReadLine());
                 }
             }
             sw.Close();
@@ -467,7 +563,7 @@ namespace neuro
                 Backward(Y, ref error); // обратное распространение ошибки
                 UpdateWeights(alpha); // обновление весовых коэффициентов
 
-                 epoch++; // увеличиваем номер эпохи
+                epoch++; // увеличиваем номер эпохи
             } while (epoch <= epochs && error > eps);
         }
         public void Train(Vector[] X, Vector[] Y, double alpha, double eps, int epochs)
