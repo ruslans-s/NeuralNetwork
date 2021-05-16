@@ -35,7 +35,6 @@ namespace neuro
                 fileName.Add(file.Name);
             }
             listBox1.Items.Add(fileName.Count);
-
         }
 
 
@@ -82,10 +81,19 @@ namespace neuro
 
         int theardCount = 24; // Кол-во потоков + 1
 
+        //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //Обучение
-            progressBar1.Maximum = fileName.Count;
+           
+            StreamReader sw = new StreamReader("option.ini");
+            //Загружаем параметры для обучания
+            int startPosition = Convert.ToInt32(sw.ReadLine()); // Позиция в папке 3016
+            int countTeachImg = 1500; //Кол-во изображений для обучения
+            sw.Close();
+
+
+            //Прогресс бар для отслеживания 
+            progressBar1.Maximum = 1500;
 
             //Считаем время для статистики 
             Stopwatch st = new Stopwatch();
@@ -94,8 +102,7 @@ namespace neuro
             //Считываем веса из файла
             network.ReadFromFile();
 
-            int startPosition = 3016, //Стартовая позиция в папке
-                countTeachImg = 1500; //Кол-во изображений для обучения
+             
 
             for (int l = startPosition; l < fileName.Count; l++)
             {
@@ -151,7 +158,14 @@ namespace neuro
             listBox1.Items.Add("Обучение закончено, записываем данные в файл");
             listBox1.Items.Add("Время выполнения: "+ st.Elapsed.TotalSeconds + " C.");
 
+            //Записываем веса в файл
             network.WriteToFile();
+
+            //Запись итоговой позиций в файл
+            StreamWriter sR = new StreamWriter("option.ini");
+            sR.WriteLine(startPosition+ countTeachImg);
+            sR.Close();
+
         }
 
         private void тестированиеToolStripMenuItem_Click(object sender, EventArgs e)
@@ -221,6 +235,7 @@ namespace neuro
                 listBox1.Items.Add(nS+": успешно" + numberSuccess[nS]+ " Неудач:" + numberFailure[nS]);
             }
 
+           
         }
 
         private void загрузитьToolStripMenuItem_Click(object sender, EventArgs e)
