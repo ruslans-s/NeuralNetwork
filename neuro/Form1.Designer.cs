@@ -41,6 +41,7 @@ namespace neuro
             this.настройкиToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.загрузитьВесыИзФайлаToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.записатьВесыВФайлToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.параметрыToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -96,21 +97,21 @@ namespace neuro
             // обучениеToolStripMenuItem
             // 
             this.обучениеToolStripMenuItem.Name = "обучениеToolStripMenuItem";
-            this.обучениеToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.обучениеToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.обучениеToolStripMenuItem.Text = "Обучение";
             this.обучениеToolStripMenuItem.Click += new System.EventHandler(this.обучениеToolStripMenuItem_Click);
             // 
             // тестированиеToolStripMenuItem
             // 
             this.тестированиеToolStripMenuItem.Name = "тестированиеToolStripMenuItem";
-            this.тестированиеToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.тестированиеToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.тестированиеToolStripMenuItem.Text = "Тестирование";
             this.тестированиеToolStripMenuItem.Click += new System.EventHandler(this.тестированиеToolStripMenuItem_Click);
             // 
             // загрузитьToolStripMenuItem
             // 
             this.загрузитьToolStripMenuItem.Name = "загрузитьToolStripMenuItem";
-            this.загрузитьToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.загрузитьToolStripMenuItem.Size = new System.Drawing.Size(150, 22);
             this.загрузитьToolStripMenuItem.Text = "Загрузить";
             this.загрузитьToolStripMenuItem.Click += new System.EventHandler(this.загрузитьToolStripMenuItem_Click);
             // 
@@ -118,7 +119,8 @@ namespace neuro
             // 
             this.настройкиToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.загрузитьВесыИзФайлаToolStripMenuItem,
-            this.записатьВесыВФайлToolStripMenuItem});
+            this.записатьВесыВФайлToolStripMenuItem,
+            this.параметрыToolStripMenuItem});
             this.настройкиToolStripMenuItem.Name = "настройкиToolStripMenuItem";
             this.настройкиToolStripMenuItem.Size = new System.Drawing.Size(79, 20);
             this.настройкиToolStripMenuItem.Text = "Настройки";
@@ -136,6 +138,13 @@ namespace neuro
             this.записатьВесыВФайлToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
             this.записатьВесыВФайлToolStripMenuItem.Text = "Записать весы в файл";
             this.записатьВесыВФайлToolStripMenuItem.Click += new System.EventHandler(this.записатьВесыВФайлToolStripMenuItem_Click);
+            // 
+            // параметрыToolStripMenuItem
+            // 
+            this.параметрыToolStripMenuItem.Name = "параметрыToolStripMenuItem";
+            this.параметрыToolStripMenuItem.Size = new System.Drawing.Size(211, 22);
+            this.параметрыToolStripMenuItem.Text = "Параметры";
+            this.параметрыToolStripMenuItem.Click += new System.EventHandler(this.параметрыToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -171,6 +180,7 @@ namespace neuro
         private System.Windows.Forms.ToolStripMenuItem обучениеToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem тестированиеToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem загрузитьToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem параметрыToolStripMenuItem;
     }
 }
 

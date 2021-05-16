@@ -45,9 +45,9 @@ namespace neuro
 
         static object locker = new object();
         //Функция для обучения в многопоточности
-        void fornewthread(Vector fileVector, Vector Y, Network network)
+        void fornewthread(Vector fileVector, Vector Y, Network network, int toch, int epoh)
         {
-            network.Train(fileVector, Y, 1, 1e-7, 10000/ theardCount); // запускаем обучение сети 
+            network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
         }
 
         int jk = 0;
@@ -84,19 +84,22 @@ namespace neuro
         //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
         {
-           
+
+            theardCount = Setting.txtBox2 - 1;
+
             StreamReader sw = new StreamReader("option.ini");
             //Загружаем параметры для обучания
             int startPosition = Convert.ToInt32(sw.ReadLine()); // Позиция в папке 3016
-            int countTeachImg = 1500; //Кол-во изображений для обучения
+
+            int countTeachImg = Setting.txtBox2; //Кол-во изображений для обучения
             sw.Close();
 
             listBox1.Items.Add("Начинаем обучение, позиция: "+ startPosition);
             listBox1.Items.Add("циклов обучения: " + countTeachImg);
-
+           
             //Прогресс бар для отслеживания 
-            progressBar1.Maximum = 1500;
-
+            progressBar1.Maximum = countTeachImg+1;
+            progressBar1.Value = 0;
             //Считаем время для статистики 
             Stopwatch st = new Stopwatch();
             st.Start();
@@ -136,14 +139,14 @@ namespace neuro
                     //Создаем поток и добавляем в него все данные
                     threads.Add(new Thread(() =>
                     {
-                        fornewthread(fileVector, Y, network);
+                        fornewthread(fileVector, Y, network, 2, Setting.txtBox3);
                     }));
                     //Запускаем поток
                     threads[i].Start();
                 }
 
                 //Запускаем в главном потоке обучение
-                network.Train(fileVector, Y, 1, 1e-7, 10000 / theardCount); // запускаем обучение сети 
+                network.Train(fileVector, Y, 2 , 1e-7, Setting.txtBox3 / theardCount); // запускаем обучение сети 
 
                 //Увеличиваем прогресс бар
                 progressBar1.Value = progressBar1.Value + 1;
@@ -283,6 +286,13 @@ namespace neuro
                 //Пишем догадку
                 listBox1.Items.Add("Это: " + samplePos + " ? " + sample);
             }
+        }
+
+        Setting Setting = new Setting();
+
+        private void параметрыToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Setting.Show();
         }
     }
 
