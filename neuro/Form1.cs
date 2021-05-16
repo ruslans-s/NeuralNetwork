@@ -34,7 +34,7 @@ namespace neuro
             {
                 fileName.Add(file.Name);
             }
-            listBox1.Items.Add(fileName.Count);
+           // listBox1.Items.Add(fileName.Count);
         }
 
 
@@ -91,6 +91,8 @@ namespace neuro
             int countTeachImg = 1500; //Кол-во изображений для обучения
             sw.Close();
 
+            listBox1.Items.Add("Начинаем обучение, позиция: "+ startPosition);
+            listBox1.Items.Add("циклов обучения: " + countTeachImg);
 
             //Прогресс бар для отслеживания 
             progressBar1.Maximum = 1500;
