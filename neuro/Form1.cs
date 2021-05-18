@@ -107,8 +107,6 @@ namespace neuro
             //Считываем веса из файла
             network.ReadFromFile();
 
-             
-
             for (int l = startPosition; l < fileName.Count; l++)
             {
                 //Загружаем картинку
@@ -128,8 +126,6 @@ namespace neuro
                 //Записываем данные в вектор ответа
                 Y[Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
 
-                //Пробуем в потоки
-              //  int theardCount = 2014; // Кол-во потоков + 1
 
                 List<Thread> threads = new List<Thread>(); // Список потоков
 
@@ -580,18 +576,17 @@ namespace neuro
 
             double error; // ошибка эпохи
 
-            do
-            {
+            
                 error = 0; // обнуляем ошибку
 
-                // проходимся по всем элементам обучающего множества
+                
+                    // проходимся по всем элементам обучающего множества
 
                 Forward(X); // прямое распространение сигнала
                 Backward(Y, ref error); // обратное распространение ошибки
                 UpdateWeights(alpha); // обновление весовых коэффициентов
 
-                epoch++; // увеличиваем номер эпохи
-            } while (epoch <= epochs && error > eps);
+            
         }
         public void Train(Vector[] X, Vector[] Y, double alpha, double eps, int epochs)
         {
