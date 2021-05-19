@@ -29,7 +29,7 @@ namespace neuro
             network.ReadFromFile();
 
             //Создаем список обучаюших картинок
-            DirectoryInfo dir = new DirectoryInfo(@"D:\repos\neuro\train\");
+            DirectoryInfo dir = new DirectoryInfo(@"train\");
             foreach (FileInfo file in dir.GetFiles())
             {
                 fileName.Add(file.Name);
@@ -110,7 +110,7 @@ namespace neuro
             for (int l = startPosition; l < fileName.Count; l++)
             {
                 //Загружаем картинку
-                Bitmap newImage = new Bitmap(@"D:\repos\neuro\train\" + fileName[l]);
+                Bitmap newImage = new Bitmap(@"train\" + fileName[l]);
 
                 //Создаем вектора с данными 
                 Vector fileVector = new Vector(784);
@@ -180,7 +180,7 @@ namespace neuro
             int[] numberSuccess = new int[10];
             int[] numberFailure = new int[10];
 
-            DirectoryInfo dir = new DirectoryInfo(@"D:\repos\neuro\test\");
+            DirectoryInfo dir = new DirectoryInfo(@"test\");
             foreach (FileInfo file in dir.GetFiles())
             {
                 testFileName.Add(file.Name);
@@ -192,7 +192,7 @@ namespace neuro
 
             for (int tF = 0; tF < testFileName.Count; tF++)
             {
-                Bitmap newImage = new Bitmap(@"D:\repos\neuro\test\" + testFileName[tF]);
+                Bitmap newImage = new Bitmap(@"test\" + testFileName[tF]);
 
                 //Создаем вектора с данными 
                 Vector fileVector = new Vector(784);
@@ -581,17 +581,19 @@ namespace neuro
 
             double error; // ошибка эпохи
 
-            
+            do
+            {
                 error = 0; // обнуляем ошибку
 
-                
-                    // проходимся по всем элементам обучающего множества
+                // проходимся по всем элементам обучающего множества
 
                 Forward(X); // прямое распространение сигнала
                 Backward(Y, ref error); // обратное распространение ошибки
                 UpdateWeights(alpha); // обновление весовых коэффициентов
 
-            
+
+                epoch++; // увеличиваем номер эпохи
+            } while (epoch <= epochs && error > eps);
         }
         public void Train(Vector[] X, Vector[] Y, double alpha, double eps, int epochs)
         {
