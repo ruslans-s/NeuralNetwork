@@ -123,7 +123,12 @@ namespace neuro
                         //Получаем цвет от 0 до 1 в градиенте белого 
                         fileVector[j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
                     }
+
                 //Записываем данные в вектор ответа
+                for(int r1=0; r1 < 10; r1++)
+                {
+                    Y[r1] = -1;
+                }
                 Y[Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
 
 
