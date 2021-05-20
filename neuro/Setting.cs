@@ -14,6 +14,7 @@ namespace neuro
     public partial class Setting : Form
     {
         public int txtBox1, txtBox2, txtBox3;
+
         public Setting()
         {
             InitializeComponent();
@@ -46,13 +47,12 @@ namespace neuro
             sR.WriteLine(textBox2.Text);
             sR.WriteLine(textBox1.Text);
             sR.WriteLine(textBox3.Text);
-            sR.Close();
-            
+            sR.Close();            
             
             txtBox1 = Convert.ToInt32((string)textBox1.Text);
             txtBox2 = Convert.ToInt32((string)textBox2.Text);
             txtBox3 = Convert.ToInt32((string)textBox3.Text);
-
+ 
             this.Hide();
         }
     }

@@ -80,8 +80,8 @@ namespace neuro
         }
 
         int theardCount = 24; // Кол-во потоков + 1
-
-        //Обучение
+      
+          //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -90,7 +90,6 @@ namespace neuro
             StreamReader sw = new StreamReader("option.ini");
             //Загружаем параметры для обучания
             int startPosition = Convert.ToInt32(sw.ReadLine()); // Позиция в папке 3016
-
             int countTeachImg = Setting.txtBox2; //Кол-во изображений для обучения
             sw.Close();
 
