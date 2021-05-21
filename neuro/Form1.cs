@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace neuro
 {
@@ -49,6 +50,10 @@ namespace neuro
         {
             network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
         }
+        void fornewthread(Vector[] fileVector, Vector[] Y, Network network, int toch, int epoh)
+        {
+            network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
+        }
 
         int jk = 0;
         //Обработка изображения для ответа
@@ -80,12 +85,13 @@ namespace neuro
         }
 
         int theardCount = 24; // Кол-во потоков + 1
-      
-          //Обучение
+
+        //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
         {
-
-            theardCount = Setting.txtBox2 - 1;
+            teach();
+            /*
+            theardCount = Setting.txtBox1 - 1;
 
             StreamReader sw = new StreamReader("option.ini");
             //Загружаем параметры для обучания
@@ -169,10 +175,95 @@ namespace neuro
             //Запись итоговой позиций в файл
             StreamWriter sR = new StreamWriter("option.ini");
             sR.WriteLine(startPosition+ countTeachImg);
-            sR.Close();
+            sR.Close();*/
 
         }
 
+        void teach()
+        {
+            theardCount = Setting.txtBox1 - 1;
+
+            StreamReader sw = new StreamReader("option.ini");
+            //Загружаем параметры для обучания
+            int startPosition = Convert.ToInt32(sw.ReadLine()); // Позиция в папке 3016
+            int countTeachImg = Setting.txtBox2; //Кол-во изображений для обучения
+            sw.Close();
+
+            listBox1.Items.Add("Начинаем обучение, позиция: " + startPosition);
+            listBox1.Items.Add("циклов обучения: " + countTeachImg);
+
+            //Прогресс бар для отслеживания 
+            progressBar1.Maximum = countTeachImg + 1;
+            progressBar1.Value = 0;
+            //Считаем время для статистики 
+            Stopwatch st = new Stopwatch();
+            st.Start();
+
+            //Считываем веса из файла
+            network.ReadFromFile();
+
+            Vector[] fileVector = new Vector[fileName.Count];
+            Vector[] Y = new Vector[fileName.Count];
+
+            for (int l = 0; l < fileName.Count; l++)
+            {
+                //Загружаем картинку
+                Bitmap newImage = new Bitmap(@"train\" + fileName[l]);
+
+                //Создаем вектора с данными 
+                 fileVector[l] = new Vector(784);
+                 Y[l] = new Vector(10);
+
+                //Обрабатываем картинк
+                for (int j = 0; j < newImage.Width; j++)
+                    for (int i = 0; i < newImage.Height; i++)
+                    {
+                        //Получаем цвет от 0 до 1 в градиенте белого 
+                        fileVector[l][j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
+                    }
+
+                //Записываем данные в вектор ответа
+                for (int r1 = 0; r1 < 10; r1++)
+                {
+                    Y[l][r1] = -1;
+                }
+                Y[l][Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
+
+            }
+
+                List<Thread> threads = new List<Thread>(); // Список потоков
+
+                //Запускаем потоки
+                for (int i = 0; i < theardCount; i++)
+                {
+                    //Создаем поток и добавляем в него все данные
+                    threads.Add(new Thread(() =>
+                    {
+                        fornewthread(fileVector, Y, network, 2, Setting.txtBox3);
+                    }));
+                    //Запускаем поток
+                    threads[i].Start();
+                }
+
+                //Запускаем в главном потоке обучение
+                network.Train(fileVector, Y, 2, 1e-7, Setting.txtBox3); // запускаем обучение сети 
+
+            //Останавливаем таймер
+            st.Stop();
+
+            //Закончили 
+            listBox1.Items.Add("Обучение закончено, записываем данные в файл");
+            listBox1.Items.Add("Время выполнения: " + st.Elapsed.TotalSeconds + " C.");
+
+            //Записываем веса в файл
+            network.WriteToFile();
+
+            //Запись итоговой позиций в файл
+            StreamWriter sR = new StreamWriter("option.ini");
+            sR.WriteLine(startPosition + countTeachImg);
+            sR.Close();
+
+        }
         private void тестированиеToolStripMenuItem_Click(object sender, EventArgs e)
         {
             List<string> testFileName = new List<string>();
@@ -219,8 +310,9 @@ namespace neuro
                         samplePos = j;
                     }
                 }
+       
                 //Пишем догадку
-                if(samplePos != Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))
+                if (samplePos != Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))
                 {
                     failure++;
                     numberFailure[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
@@ -230,6 +322,9 @@ namespace neuro
                     numberSuccess[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
                     success++;
                 }
+
+
+
             }
 
             listBox1.Items.Add("Успешных: " + success);
