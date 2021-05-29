@@ -8,28 +8,28 @@ namespace neuro
 {
     class Vector
     {
-        public double[] v; // значения вектора
+        public float[] v; // значения вектора
         public int n; // длина вектора
 
         // конструктор из длины
         public Vector(int n)
         {
             this.n = n; // копируем длину
-            v = new double[n]; // создаём массив
+            v = new float[n]; // создаём массив
         }
 
         // создание вектора из вещественных значений
-        public Vector(params double[] values)
+        public Vector(params float[] values)
         {
             n = values.Length;
-            v = new double[n];
+            v = new float[n];
 
             for (int i = 0; i < n; i++)
                 v[i] = values[i];
         }
 
         // обращение по индексу
-        public double this[int i]
+        public float this[int i]
         {
             get { return v[i]; } // получение значение
             set { v[i] = value; } // изменение значения

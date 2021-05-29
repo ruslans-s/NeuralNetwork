@@ -4,9 +4,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Forms.DataVisualization.Charting;
 
 namespace neuro
 {
@@ -19,7 +18,8 @@ namespace neuro
     public partial class Form1 : Form
     {
         //Создаем сеть с 784 входами, 16 скрытыми нейронами, и 10 выходами.
-        Network network = new Network(new int[] { 784, 16, 10 });
+        Network network = new Network(new int[] { 784, 30, 10 });
+        //  NetworkGPU network = new NetworkGPU(new int[] { 784, 16, 10 });
 
         List<string> fileName = new List<string>();
 
@@ -27,7 +27,7 @@ namespace neuro
         {
             InitializeComponent();
             //Считываем веса
-            network.ReadFromFile();
+          network.ReadFromFile();
 
             //Создаем список обучаюших картинок
             DirectoryInfo dir = new DirectoryInfo(@"train\");
@@ -35,7 +35,7 @@ namespace neuro
             {
                 fileName.Add(file.Name);
             }
-           // listBox1.Items.Add(fileName.Count);
+            // listBox1.Items.Add(fileName.Count);
         }
 
 
@@ -46,14 +46,15 @@ namespace neuro
 
         static object locker = new object();
         //Функция для обучения в многопоточности
-        void fornewthread(Vector fileVector, Vector Y, Network network, int toch, int epoh)
-        {
-            network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
-        }
-        void fornewthread(Vector[] fileVector, Vector[] Y, Network network, int toch, int epoh)
-        {
-            network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
-        }
+        /*   void fornewthread(Vector fileVector, Vector Y, Network network, int toch, int epoh)
+           {
+               network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
+           }
+           void fornewthread(Vector[] fileVector, Vector[] Y, Network network, double toch, int epoh)
+           {
+               network.Train(fileVector, Y, toch, 1e-7, epoh); // запускаем обучение сети 
+
+           }*/
 
         int jk = 0;
         //Обработка изображения для ответа
@@ -89,6 +90,7 @@ namespace neuro
         //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            //teachInt();
             teach();
             /*
             theardCount = Setting.txtBox1 - 1;
@@ -178,7 +180,6 @@ namespace neuro
             sR.Close();*/
 
         }
-
         void teach()
         {
             theardCount = Setting.txtBox1 - 1;
@@ -189,12 +190,7 @@ namespace neuro
             int countTeachImg = Setting.txtBox2; //Кол-во изображений для обучения
             sw.Close();
 
-            listBox1.Items.Add("Начинаем обучение, позиция: " + startPosition);
-            listBox1.Items.Add("циклов обучения: " + countTeachImg);
 
-            //Прогресс бар для отслеживания 
-            progressBar1.Maximum = countTeachImg + 1;
-            progressBar1.Value = 0;
             //Считаем время для статистики 
             Stopwatch st = new Stopwatch();
             st.Start();
@@ -204,49 +200,37 @@ namespace neuro
 
             Vector[] fileVector = new Vector[fileName.Count];
             Vector[] Y = new Vector[fileName.Count];
-
+            
+            
             for (int l = 0; l < fileName.Count; l++)
             {
                 //Загружаем картинку
                 Bitmap newImage = new Bitmap(@"train\" + fileName[l]);
 
                 //Создаем вектора с данными 
-                 fileVector[l] = new Vector(784);
-                 Y[l] = new Vector(10);
+                fileVector[l] = new Vector(784);
+                Y[l] = new Vector(10);
 
                 //Обрабатываем картинк
-                for (int j = 0; j < newImage.Width; j++)
-                    for (int i = 0; i < newImage.Height; i++)
-                    {
-                        //Получаем цвет от 0 до 1 в градиенте белого 
-                        fileVector[l][j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
-                    }
+                  for (int j = 0; j < newImage.Height; j++)
+                      for (int i = 0; i < newImage.Width; i++)
+                      {
+                          //Получаем цвет от 0 до 1 в градиенте белого 
+                          fileVector[l][j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(i, i).R) + Convert.ToInt32(newImage.GetPixel(i, i).G) + Convert.ToInt32(newImage.GetPixel(i, i).B)) / 3));
+                      }
 
                 //Записываем данные в вектор ответа
                 for (int r1 = 0; r1 < 10; r1++)
                 {
-                    Y[l][r1] = -1;
+                    Y[l][r1] = 0;
                 }
-                Y[l][Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1;
+                Y[l][Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1.0f;
 
             }
 
-                List<Thread> threads = new List<Thread>(); // Список потоков
-
-                //Запускаем потоки
-                for (int i = 0; i < theardCount; i++)
-                {
-                    //Создаем поток и добавляем в него все данные
-                    threads.Add(new Thread(() =>
-                    {
-                        fornewthread(fileVector, Y, network, 2, Setting.txtBox3);
-                    }));
-                    //Запускаем поток
-                    threads[i].Start();
-                }
-
-                //Запускаем в главном потоке обучение
-                network.Train(fileVector, Y, 2, 1e-7, Setting.txtBox3); // запускаем обучение сети 
+        
+            //Запускаем в главном потоке обучение
+            network.Train(fileVector, Y, 0.33f, 1e-20, Setting.txtBox3); // запускаем обучение сети 
 
             //Останавливаем таймер
             st.Stop();
@@ -264,11 +248,14 @@ namespace neuro
             sR.Close();
 
         }
-        private void тестированиеToolStripMenuItem_Click(object sender, EventArgs e)
+
+        public void test()
         {
             List<string> testFileName = new List<string>();
             int[] numberSuccess = new int[10];
             int[] numberFailure = new int[10];
+
+        //    DirectoryInfo dir = new DirectoryInfo(@"train\");
 
             DirectoryInfo dir = new DirectoryInfo(@"test\");
             foreach (FileInfo file in dir.GetFiles())
@@ -289,15 +276,15 @@ namespace neuro
                 Vector Y = new Vector(10);
 
                 //Обработка изображения
-                for (int j = 0; j < newImage.Width; j++)
-                    for (int i = 0; i < newImage.Height; i++)
+                for (int j = 0; j < newImage.Height; j++)
+                    for (int i = 0; i < newImage.Width; i++)
                     {
-                        fileVector[j * newImage.Width + i] = 0.00390625 * Convert.ToInt32(newImage.GetPixel(i, i).R);
+                        fileVector[j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(i, i).R) + Convert.ToInt32(newImage.GetPixel(i, i).G) + Convert.ToInt32(newImage.GetPixel(i, i).B)) / 3));
                     }
 
                 //Прямой проход по сети
                 Vector fileVector4 = network.Forward(fileVector);
-               
+
                 double sample = 0,
                     samplePos = 0;
 
@@ -310,14 +297,15 @@ namespace neuro
                         samplePos = j;
                     }
                 }
-       
+
                 //Пишем догадку
                 if (samplePos != Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))
                 {
                     failure++;
                     numberFailure[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
 
-                } else
+                }
+                else
                 {
                     numberSuccess[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
                     success++;
@@ -330,12 +318,15 @@ namespace neuro
             listBox1.Items.Add("Успешных: " + success);
             listBox1.Items.Add("Неудач: " + failure);
             listBox1.Items.Add("Проецент верных: " + (success * 100 / testFileName.Count) + "%");
-            for(int nS = 0; nS < 10; nS++)
+            for (int nS = 0; nS < 10; nS++)
             {
-                listBox1.Items.Add(nS+": успешно" + numberSuccess[nS]+ " Неудач:" + numberFailure[nS]);
+                listBox1.Items.Add(nS + ": успешно" + numberSuccess[nS] + " Неудач:" + numberFailure[nS]);
             }
 
-           
+        }
+        private void тестированиеToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            test();
         }
 
         private void загрузитьToolStripMenuItem_Click(object sender, EventArgs e)
@@ -346,15 +337,15 @@ namespace neuro
             Bitmap newImage2 = new Bitmap(openFileDialog1.FileName);
             //Установка его в форму
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-         //   pictureBox1.Load(@"D:\repos\neuro\train\" + openFileDialog1.FileName);
+            //   pictureBox1.Load(@"D:\repos\neuro\train\" + openFileDialog1.FileName);
 
             Vector fileVector3 = new Vector(784);
-          
+
             //Обработка изображения
             for (int j = 0; j < newImage2.Width; j++)
                 for (int i = 0; i < newImage2.Height; i++)
                 {
-                    fileVector3[j * newImage2.Width + i] = 0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R);
+                    fileVector3[j * newImage2.Width + i] = (float)(0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R));
                 }
 
             //Получаем ответ из нейросети 
@@ -391,7 +382,7 @@ namespace neuro
         }
     }
 
-    
+
 }
 
 

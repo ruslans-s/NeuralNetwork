@@ -8,7 +8,7 @@ namespace neuro
 {
     class Matrix
     {
-        double[][] v; // значения матрицы
+      public  float[][] v; // значения матрицы
         public int n, m; // количество строк и столбцов
 
         // создание матрицы заданного размера и заполнение случайными числами из интервала (-0.5, 0.5)
@@ -17,19 +17,19 @@ namespace neuro
             this.n = n;
             this.m = m;
 
-            v = new double[n][];
+            v = new float[n][];
 
             for (int i = 0; i < n; i++)
             {
-                v[i] = new double[m];
+                v[i] = new float[m];
 
                 for (int j = 0; j < m; j++)
-                    v[i][j] = random.NextDouble() - 0.5; // заполняем случайными числами
+                    v[i][j] = (float)(random.NextDouble() - 0.5); // заполняем случайными числами
             }
         }
 
         // обращение по индексу
-        public double this[int i, int j]
+        public float this[int i, int j]
         {
             get { return v[i][j]; } // получение значения
             set { v[i][j] = value; } // изменение значения
