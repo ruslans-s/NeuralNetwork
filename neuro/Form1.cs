@@ -27,7 +27,7 @@ namespace neuro
         {
             InitializeComponent();
             //Считываем веса
-          network.ReadFromFile();
+      //   network.ReadFromFile();
 
             //Создаем список обучаюших картинок
             DirectoryInfo dir = new DirectoryInfo(@"train\");
@@ -216,13 +216,13 @@ namespace neuro
                       for (int i = 0; i < newImage.Width; i++)
                       {
                           //Получаем цвет от 0 до 1 в градиенте белого 
-                          fileVector[l][j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(i, i).R) + Convert.ToInt32(newImage.GetPixel(i, i).G) + Convert.ToInt32(newImage.GetPixel(i, i).B)) / 3));
+                          fileVector[l][j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(j, i).R) + Convert.ToInt32(newImage.GetPixel(j, i).G) + Convert.ToInt32(newImage.GetPixel(j, i).B)) / 3));
                       }
 
                 //Записываем данные в вектор ответа
                 for (int r1 = 0; r1 < 10; r1++)
                 {
-                    Y[l][r1] = 0;
+                    Y[l][r1] = 0.0f;
                 }
                 Y[l][Convert.ToInt32(Regex.Replace(Regex.Replace(fileName[l], ".*num", ""), ".png", ""))] = 1.0f;
 
@@ -230,7 +230,7 @@ namespace neuro
 
         
             //Запускаем в главном потоке обучение
-            network.Train(fileVector, Y, 0.33f, 1e-20, Setting.txtBox3); // запускаем обучение сети 
+            network.Train(fileVector, Y, 1f, 1e-20, Setting.txtBox3); // запускаем обучение сети 
 
             //Останавливаем таймер
             st.Stop();
@@ -279,7 +279,7 @@ namespace neuro
                 for (int j = 0; j < newImage.Height; j++)
                     for (int i = 0; i < newImage.Width; i++)
                     {
-                        fileVector[j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(i, i).R) + Convert.ToInt32(newImage.GetPixel(i, i).G) + Convert.ToInt32(newImage.GetPixel(i, i).B)) / 3));
+                        fileVector[j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(j, i).R) + Convert.ToInt32(newImage.GetPixel(j, i).G) + Convert.ToInt32(newImage.GetPixel(j, i).B)) / 3));
                     }
 
                 //Прямой проход по сети
@@ -337,15 +337,15 @@ namespace neuro
             Bitmap newImage2 = new Bitmap(openFileDialog1.FileName);
             //Установка его в форму
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-            //   pictureBox1.Load(@"D:\repos\neuro\train\" + openFileDialog1.FileName);
+               pictureBox1.Load(openFileDialog1.FileName);
 
             Vector fileVector3 = new Vector(784);
 
             //Обработка изображения
-            for (int j = 0; j < newImage2.Width; j++)
-                for (int i = 0; i < newImage2.Height; i++)
+            for (int j = 0; j < newImage2.Height; j++)
+                for (int i = 0; i < newImage2.Width; i++)
                 {
-                    fileVector3[j * newImage2.Width + i] = (float)(0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R));
+                    fileVector3[j * newImage2.Height + i] = (float)(0.00390625 * Convert.ToInt32(newImage2.GetPixel(i, i).R));
                 }
 
             //Получаем ответ из нейросети 
