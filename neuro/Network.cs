@@ -146,50 +146,10 @@ namespace neuro
         public Vector Forward(Vector input)
         {
 
-            /*   for (int k = 0; k < layersN; k++)
-               {
-                   if (k == 0)// Если первый слой
-                   {
-                       for (int i = 0; i < input.n; i++) //То запись входов в нейроны 0 слоя
-                           L[k].x[i] = input[i];
-                   }
-                   else //Если нет то берем входы от преведушего 
-                   {
-                       for (int i = 0; i < L[k - 1].z.n; i++)
-                           L[k].x[i] = L[k - 1].z[i];
-                   }
-
-                   for (int i = 0; i < weights[k].n; i++)
-                   {
-                       double y = 0;
-
-                       // Y = сумма всех сигналов на вход нейрона
-                       for (int j = 0; j < weights[k].m; j++)
-                           y += weights[k][i, j] * L[k].x[j];
-
-                       // активация с помощью сигмоидальной функции
-                       L[k].z[i] = (float)(1 / (1 + Math.Exp(-y)));
-                       L[k].df[i] = L[k].z[i] * (1 - L[k].z[i]);
-
-                       // активация с помощью гиперболического тангенса
-                       // L[k].z[i] = Math.Tanh(y);
-                       // L[k].df[i] = 1 - L[k].z[i] * L[k].z[i];
-
-                       //активация с помощью ReLU
-                       //  L[k].z[i] = y > 0 ? y : 0;
-                       // L[k].df[i] = y > 0 ? 1 : 0;
-                   }
-
-               }*/
-
-
             for (int k = 0; k < layersN; k++)
             {
                 if (k == 0)// Если первый слой
                 {
-                    /* for (int i = 0; i < input.n; i++) //То запись входов в нейроны 0 слоя
-                         L[k].x[i] = input[i];*/
-
                     var results = Parallel.For(0, input.n, (i, state) =>
                     {
                         L[k].x[i] = input[i];
@@ -197,9 +157,6 @@ namespace neuro
                 }
                 else //Если нет то берем входы от преведушего 
                 {
-                    /*   for (int i = 0; i < L[k - 1].z.n; i++)
-                           L[k].x[i] = L[k - 1].z[i];*/
-
                     var results = Parallel.For(0, L[k - 1].z.n, (i, state) =>
                     {
                         L[k].x[i] = L[k - 1].z[i];
@@ -215,10 +172,9 @@ namespace neuro
                         y += weights[k][i, j] * L[k].x[j];
 
                     // активация с помощью сигмоидальной функции
-                    
-                        L[k].z[i] = (float)(1 / (1 + Math.Exp(-y)));
-                        L[k].df[i] = L[k].z[i] * (1 - L[k].z[i]);
-                    
+                    L[k].z[i] = (float)(1 / (1 + Math.Exp(-y)));
+                    L[k].df[i] = L[k].z[i] * (1 - L[k].z[i]);
+
                 });
 
             }
@@ -240,20 +196,6 @@ namespace neuro
                 error += e * e / 2; // прибавляем к ошибке половину квадрата значения
             }
 
-            // вычисляем каждую предудущю дельту на основе текущей с помощью умножения на транспонированную матрицу
-            /*   for (int k = last; k > 0; k--)
-               {
-                   for (int i = 0; i < weights[k].m; i++)
-                   {
-                       deltas[k - 1][i] = 0;
-
-                       for (int j = 0; j < weights[k].n; j++)
-                           deltas[k - 1][i] += weights[k][j, i] * deltas[k][j];
-
-                       deltas[k - 1][i] *= L[k - 1].df[i]; // умножаем получаемое значение на производную предыдущего слоя
-                   }
-               }*/
-
             for (int k = last; k > 0; k--)
             {
                 var result = Parallel.For(0, weights[k].m, (i, state) =>
@@ -273,18 +215,6 @@ namespace neuro
         // обновление весовых коэффициентов, alpha - скорость обучения
         void UpdateWeights(double alpha)
         {
-            /*
-            for (int k = 0; k < layersN; k++)
-            {
-                for (int i = 0; i < weights[k].n; i++)
-                {
-                    for (int j = 0; j < weights[k].m; j++)
-                    {
-                        weights[k][i, j] -= (float)(alpha * deltas[k][i] * L[k].x[j]);
-                    }
-                }
-            }*/
-
             for (int k = 0; k < layersN; k++)
             {
                 var result = Parallel.For(0, weights[k].n, (i, state) =>
@@ -303,8 +233,7 @@ namespace neuro
 
             double error; // ошибка эпохи
 
-            int errorTest = 0;
-            errorTest = 0;
+            StreamWriter myfile = new StreamWriter("trainResult.txt", true);
             do
             {
                 error = 0; // обнуляем ошибку
@@ -312,31 +241,24 @@ namespace neuro
                 // проходимся по всем элементам обучающего множества
                 for (int i = 0; i < X.Length; i++)
                 {
-                  Forward(X[i]); // прямое распространение сигнала
+                    Forward(X[i]); // прямое распространение сигнала
                     Backward(Y[i], ref error); // обратное распространение ошибки
                     UpdateWeights(alpha); // обновление весовых коэффициентов
                 }
 
-                StreamWriter myfile = new StreamWriter("resultAlph.txt", true);
-                myfile.WriteLine(alpha + " " + error);
-                myfile.Close();
+                myfile.WriteLine("Эпоха: " + epoch);
+                myfile.WriteLine("Ошибка эпохи: " + error);
+                myfile.WriteLine("Точность: " + test());
 
                 WriteToFile();
 
-                if (epoch % 5 == 0)
-                {
-                    if (alpha > 0.0001)
-                    {
-                        alpha = alpha * 0.9;
-                    } 
-                    errorTest = test();
-                }
-                // alpha = alpha - 0.0001;
-
                 epoch++; // увеличиваем номер эпохи
-            } while (epoch <= epochs && errorTest < 90);
+            } while (epoch <= epochs && error > eps);
+            myfile.Close();
         }
-        public int test()
+
+        //Функция тестирования
+        public string test()
         {
             List<string> testFileName = new List<string>();
             int[] numberSuccess = new int[10];
@@ -398,10 +320,7 @@ namespace neuro
 
             }
 
-            StreamWriter myfile = new StreamWriter("result.txt", true);
-            myfile.WriteLine(success * 100 / testFileName.Count + "  " + success);
-            myfile.Close();
-            return success * 100 / testFileName.Count;
+            return (success * 100 / testFileName.Count + "  " + success);
         }
 
         public void WriteTestImgToFile()

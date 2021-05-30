@@ -4,30 +4,23 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace neuro
 {
-    struct TheardStruk
-    {
-        internal Vector fileVector;
-        internal Vector Y;
-    };
 
     public partial class Form1 : Form
     {
-        //Создаем сеть с 784 входами, 16 скрытыми нейронами, и 10 выходами.
+        //Создаем сеть с 784 входами, 30 скрытыми нейронами, и 10 выходами.
         Network network = new Network(new int[] { 784, 30, 10 });
-        //  NetworkGPU network = new NetworkGPU(new int[] { 784, 16, 10 });
-
         List<string> fileName = new List<string>();
 
         public Form1()
         {
             InitializeComponent();
+
             //Считываем веса
-      //   network.ReadFromFile();
+            network.ReadFromFile();
 
             //Создаем список обучаюших картинок
             DirectoryInfo dir = new DirectoryInfo(@"train\");
@@ -35,7 +28,7 @@ namespace neuro
             {
                 fileName.Add(file.Name);
             }
-            // listBox1.Items.Add(fileName.Count);
+
         }
 
 
@@ -43,18 +36,6 @@ namespace neuro
         {
 
         }
-
-        static object locker = new object();
-        //Функция для обучения в многопоточности
-        /*   void fornewthread(Vector fileVector, Vector Y, Network network, int toch, int epoh)
-           {
-               network.Train(fileVector, Y, toch, 1e-7, epoh / theardCount); // запускаем обучение сети 
-           }
-           void fornewthread(Vector[] fileVector, Vector[] Y, Network network, double toch, int epoh)
-           {
-               network.Train(fileVector, Y, toch, 1e-7, epoh); // запускаем обучение сети 
-
-           }*/
 
         int jk = 0;
         //Обработка изображения для ответа
@@ -71,21 +52,19 @@ namespace neuro
         private void загрузитьВесыИзФайлаToolStripMenuItem_Click(object sender, EventArgs e)
         {
             network.ReadFromFile();
-            listBox1.Items.Add("Параметры записаны в файл");
+            listBox1.Items.Add("Параметры загружены из файла");
         }
         //Запись весов
         private void записатьВесыВФайлToolStripMenuItem_Click(object sender, EventArgs e)
         {
             network.WriteToFile();
-            listBox1.Items.Add("Параметры загружены из файла");
+            listBox1.Items.Add("Параметры записаны в файл");
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
-
-        int theardCount = 24; // Кол-во потоков + 1
 
         //Обучение
         private void обучениеToolStripMenuItem_Click(object sender, EventArgs e)
@@ -182,7 +161,8 @@ namespace neuro
         }
         void teach()
         {
-            theardCount = Setting.txtBox1 - 1;
+
+            listBox1.Items.Clear();
 
             StreamReader sw = new StreamReader("option.ini");
             //Загружаем параметры для обучания
@@ -200,8 +180,8 @@ namespace neuro
 
             Vector[] fileVector = new Vector[fileName.Count];
             Vector[] Y = new Vector[fileName.Count];
-            
-            
+
+
             for (int l = 0; l < fileName.Count; l++)
             {
                 //Загружаем картинку
@@ -212,12 +192,12 @@ namespace neuro
                 Y[l] = new Vector(10);
 
                 //Обрабатываем картинк
-                  for (int j = 0; j < newImage.Height; j++)
-                      for (int i = 0; i < newImage.Width; i++)
-                      {
-                          //Получаем цвет от 0 до 1 в градиенте белого 
-                          fileVector[l][j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(j, i).R) + Convert.ToInt32(newImage.GetPixel(j, i).G) + Convert.ToInt32(newImage.GetPixel(j, i).B)) / 3));
-                      }
+                for (int j = 0; j < newImage.Height; j++)
+                    for (int i = 0; i < newImage.Width; i++)
+                    {
+                        //Получаем цвет от 0 до 1 в градиенте белого 
+                        fileVector[l][j * newImage.Height + i] = (float)(0.00390625 * ((Convert.ToInt32(newImage.GetPixel(j, i).R) + Convert.ToInt32(newImage.GetPixel(j, i).G) + Convert.ToInt32(newImage.GetPixel(j, i).B)) / 3));
+                    }
 
                 //Записываем данные в вектор ответа
                 for (int r1 = 0; r1 < 10; r1++)
@@ -228,9 +208,9 @@ namespace neuro
 
             }
 
-        
+
             //Запускаем в главном потоке обучение
-            network.Train(fileVector, Y, 1f, 1e-20, Setting.txtBox3); // запускаем обучение сети 
+            network.Train(fileVector, Y, 1f, Setting.txtBox1, Setting.txtBox3); // запускаем обучение сети 
 
             //Останавливаем таймер
             st.Stop();
@@ -246,6 +226,8 @@ namespace neuro
             StreamWriter sR = new StreamWriter("option.ini");
             sR.WriteLine(startPosition + countTeachImg);
             sR.Close();
+            listBox1.Items.AddRange(File.ReadAllLines("trainResult.txt"));
+
 
         }
 
@@ -255,7 +237,6 @@ namespace neuro
             int[] numberSuccess = new int[10];
             int[] numberFailure = new int[10];
 
-        //    DirectoryInfo dir = new DirectoryInfo(@"train\");
 
             DirectoryInfo dir = new DirectoryInfo(@"test\");
             foreach (FileInfo file in dir.GetFiles())
@@ -303,16 +284,12 @@ namespace neuro
                 {
                     failure++;
                     numberFailure[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
-
                 }
                 else
                 {
                     numberSuccess[Convert.ToInt32(Convert.ToInt32(Regex.Replace(Regex.Replace(testFileName[tF], ".*num", ""), ".png", "")))]++;
                     success++;
                 }
-
-
-
             }
 
             listBox1.Items.Add("Успешных: " + success);
@@ -337,7 +314,7 @@ namespace neuro
             Bitmap newImage2 = new Bitmap(openFileDialog1.FileName);
             //Установка его в форму
             pictureBox1.SizeMode = PictureBoxSizeMode.StretchImage;
-               pictureBox1.Load(openFileDialog1.FileName);
+            pictureBox1.Load(openFileDialog1.FileName);
 
             Vector fileVector3 = new Vector(784);
 
@@ -349,29 +326,28 @@ namespace neuro
                 }
 
             //Получаем ответ из нейросети 
-            lock (locker)
+
+            //Прямой проход по сети
+            Vector fileVector4 = network.Forward(fileVector3);
+            //Очистка листбокса
+            listBox1.Items.Clear();
+            //Выводим имя файла
+            listBox1.Items.Add(Convert.ToString(openFileDialog1.FileName));
+            double sample = 0,
+                samplePos = 0;
+            //Выводим ответ и ишем Max
+            for (int j = 0; j < 10; j++)
             {
-                //Прямой проход по сети
-                Vector fileVector4 = network.Forward(fileVector3);
-                //Очистка листбокса
-                listBox1.Items.Clear();
-                //Выводим имя файла
-                listBox1.Items.Add(Convert.ToString(openFileDialog1.FileName));
-                double sample = 0,
-                    samplePos = 0;
-                //Выводим ответ и ишем Max
-                for (int j = 0; j < 10; j++)
+                listBox1.Items.Add(j + ": " + fileVector4[j]);
+                if (fileVector4[j] > sample)
                 {
-                    listBox1.Items.Add(j + ": " + fileVector4[j]);
-                    if (fileVector4[j] > sample)
-                    {
-                        sample = fileVector4[j];
-                        samplePos = j;
-                    }
+                    sample = fileVector4[j];
+                    samplePos = j;
                 }
-                //Пишем догадку
-                listBox1.Items.Add("Это: " + samplePos + " ? " + sample);
             }
+            //Пишем догадку
+            listBox1.Items.Add("Это: " + samplePos + " ? " + sample);
+
         }
 
         Setting Setting = new Setting();

@@ -13,19 +13,18 @@ namespace neuro
 {
     public partial class Setting : Form
     {
-        public int txtBox1, txtBox2, txtBox3;
+        public int txtBox2, txtBox3;
+        public float txtBox1;
 
         public Setting()
         {
             InitializeComponent();
              StreamReader sw = new StreamReader("Setting.ini");
-             textBox2.Text = sw.ReadLine();
-             textBox1.Text = sw.ReadLine();
-             textBox3.Text = sw.ReadLine();
+             Alph.Text = sw.ReadLine();
+             Epohs.Text = sw.ReadLine();
 
-             txtBox1 = Convert.ToInt32(textBox1.Text);
-             txtBox2 = Convert.ToInt32(textBox2.Text);
-             txtBox3 = Convert.ToInt32(textBox3.Text);
+             txtBox1 = Convert.ToInt32(Alph.Text);
+             txtBox3 = Convert.ToInt32(Epohs.Text);
 
              sw.Close();
 
@@ -36,6 +35,11 @@ namespace neuro
             this.Hide();
         }
 
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
         private void label3_Click(object sender, EventArgs e)
         {
            
@@ -44,14 +48,13 @@ namespace neuro
         private void button1_Click(object sender, EventArgs e)
         {
             StreamWriter sR = new StreamWriter("Setting.ini");
-            sR.WriteLine(textBox2.Text);
-            sR.WriteLine(textBox1.Text);
-            sR.WriteLine(textBox3.Text);
+           
+            sR.WriteLine(Alph.Text);
+            sR.WriteLine(Epohs.Text);
             sR.Close();            
             
-            txtBox1 = Convert.ToInt32((string)textBox1.Text);
-            txtBox2 = Convert.ToInt32((string)textBox2.Text);
-            txtBox3 = Convert.ToInt32((string)textBox3.Text);
+            txtBox1 = (float)Convert.ToDouble((string)Alph.Text);
+            txtBox3 = Convert.ToInt32((string)Epohs.Text);
  
             this.Hide();
         }
