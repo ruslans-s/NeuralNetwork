@@ -23,7 +23,7 @@ namespace neuro
              Alph.Text = sw.ReadLine();
              Epohs.Text = sw.ReadLine();
 
-             txtBox1 = Convert.ToInt32(Alph.Text);
+             txtBox1 = (float)Convert.ToDouble(Alph.Text);
              txtBox3 = Convert.ToInt32(Epohs.Text);
 
              sw.Close();

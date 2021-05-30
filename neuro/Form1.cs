@@ -164,13 +164,6 @@ namespace neuro
 
             listBox1.Items.Clear();
 
-            StreamReader sw = new StreamReader("option.ini");
-            //Загружаем параметры для обучания
-            int startPosition = Convert.ToInt32(sw.ReadLine()); // Позиция в папке 3016
-            int countTeachImg = Setting.txtBox2; //Кол-во изображений для обучения
-            sw.Close();
-
-
             //Считаем время для статистики 
             Stopwatch st = new Stopwatch();
             st.Start();
@@ -210,7 +203,7 @@ namespace neuro
 
 
             //Запускаем в главном потоке обучение
-            network.Train(fileVector, Y, 1f, Setting.txtBox1, Setting.txtBox3); // запускаем обучение сети 
+            network.Train(fileVector, Y, Setting.txtBox1, 1e-15, Setting.txtBox3); // запускаем обучение сети 
 
             //Останавливаем таймер
             st.Stop();
@@ -222,12 +215,7 @@ namespace neuro
             //Записываем веса в файл
             network.WriteToFile();
 
-            //Запись итоговой позиций в файл
-            StreamWriter sR = new StreamWriter("option.ini");
-            sR.WriteLine(startPosition + countTeachImg);
-            sR.Close();
             listBox1.Items.AddRange(File.ReadAllLines("trainResult.txt"));
-
 
         }
 
